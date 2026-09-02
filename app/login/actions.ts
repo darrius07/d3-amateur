@@ -1,11 +1,6 @@
-"use server";
-
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-
-export async function login(formData: FormData) {
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email: String(formData.get("email")), password: String(formData.get("password")) });
-  if (error) redirect(`/login?message=${encodeURIComponent("Identifiants invalides")}`);
-  redirect("/admin");
-}
+'use server';
+import {redirect} from 'next/navigation';import {createClient} from '@/lib/supabase/server';
+function safeReturnTo(value:string){return value.startsWith('/')&&!value.startsWith('//')?value:'/club-studio'}
+export async function login(formData:FormData){const supabase=await createClient();const returnTo=safeReturnTo(String(formData.get('returnTo')||'/club-studio'));const {error}=await supabase.auth.signInWithPassword({email:String(formData.get('email')),password:String(formData.get('password'))});if(error)redirect(`/login?message=${encodeURIComponent('Identifiants invalides')}&returnTo=${encodeURIComponent(returnTo)}`);redirect(returnTo)}
+export async function signup(formData:FormData){const supabase=await createClient();const returnTo=safeReturnTo(String(formData.get('returnTo')||'/club-studio'));const {data,error}=await supabase.auth.signUp({email:String(formData.get('email')),password:String(formData.get('password')),options:{data:{display_name:String(formData.get('display_name'))}}});if(error)redirect(`/login?message=${encodeURIComponent(error.message)}&returnTo=${encodeURIComponent(returnTo)}`);if(data.session)redirect(returnTo);redirect(`/login?message=${encodeURIComponent('Compte créé. Confirmez votre adresse e-mail pour continuer.')}&returnTo=${encodeURIComponent(returnTo)}`)}
+export async function logout(){const supabase=await createClient();await supabase.auth.signOut();redirect('/')}

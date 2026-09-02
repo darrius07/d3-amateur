@@ -17,6 +17,9 @@ export type Database = {
           country_code: string;
           status: string;
           claim_status: string;
+          logo_path: string | null;
+          logo_source: string | null;
+          logo_updated_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -33,6 +36,9 @@ export type Database = {
           country_code?: string;
           status?: string;
           claim_status?: string;
+          logo_path?: string | null;
+          logo_source?: string | null;
+          logo_updated_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -49,6 +55,9 @@ export type Database = {
           country_code?: string;
           status?: string;
           claim_status?: string;
+          logo_path?: string | null;
+          logo_source?: string | null;
+          logo_updated_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

@@ -12,6 +12,7 @@
     "test:rls:remote": "node scripts/rls-remote-smoke.mjs",
     "test:unit": "vitest run",
     "test:rls:step2": "node scripts/step2-security-smoke.mjs",
+    "test:security:step3": "node scripts/step3-security-integration.mjs",
     "import:rna": "node --experimental-strip-types scripts/import-rna.mjs"
   },
   "dependencies": {
