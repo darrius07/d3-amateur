@@ -14,6 +14,7 @@
     "test:rls:step2": "node scripts/step2-security-smoke.mjs",
     "test:security:step3": "node scripts/step3-security-integration.mjs",
     "test:security:step4": "node scripts/step4-security-integration.mjs",
+    "test:security:step5a": "node scripts/step5a-security-integration.mjs",
     "import:rna": "node --experimental-strip-types scripts/import-rna.mjs"
   },
   "dependencies": {
