@@ -10,6 +10,8 @@ const eslintConfig = [
       ".vercel/**",
       "supabase/.branches/**",
       "supabase/.temp/**",
+      "next-env.d.ts",
+      "tsconfig.tsbuildinfo",
     ],
   },
 ];

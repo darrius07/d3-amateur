@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test:rls": "supabase test db supabase/tests/rls.test.sql"
+    "test:rls": "supabase test db supabase/tests/rls_foundation.sql",
+    "test:rls:remote": "node scripts/rls-remote-smoke.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

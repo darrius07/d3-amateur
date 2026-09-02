@@ -8,5 +8,6 @@ out/
 !.env.example
 supabase/.branches/
 supabase/.temp/
+tsconfig.tsbuildinfo
 *.log
 .DS_Store

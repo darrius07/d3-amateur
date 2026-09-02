@@ -6,7 +6,7 @@ Fondation technique indépendante de D3 Amateur : Next.js, TypeScript, Tailwind 
 
 - Repo GitHub dédié : `darrius07/d3-amateur`
 - Projet Vercel dédié : `d3-amateur`
-- Supabase D3 Amateur : à créer séparément depuis un accès Supabase authentifié
+- Supabase D3 Amateur dédié : projet `asbimnixuyommivopumf`
 - Les secrets ne sont jamais commités ; les variables sont déclarées dans `.env.example` et renseignées localement dans `.env.local` ou dans les variables d’environnement Vercel/Supabase.
 
 ## Développement local
@@ -29,6 +29,6 @@ Les migrations SQL sont la source de vérité du schéma. Aucune clé `service_r
 - Extensions de recherche `pg_trgm` et `unaccent` activées
 - Préparation d’architecture provider adapter vide
 
-## Blocage actuel
+## Sécurité des profils
 
-Le projet Vercel dédié a bien été créé. L’étape Supabase cloud est bloquée tant que le CLI Supabase n’est pas authentifié (flux interactif / SSO / 2FA requis par l’outil), sans soumettre de secret dans le chat ; les migrations et tests SQL sont néanmoins préparés dans le dépôt pour continuer dès que ce point est validé.
+Les utilisateurs authentifiés peuvent mettre à jour uniquement leur propre `display_name`. Les champs de privilège, dont `d3_admin_role`, sont réservés aux opérations serveur réellement privilégiées et ne sont jamais modifiables avec un jeton utilisateur.
