@@ -13,6 +13,7 @@
     "test:unit": "vitest run",
     "test:rls:step2": "node scripts/step2-security-smoke.mjs",
     "test:security:step3": "node scripts/step3-security-integration.mjs",
+    "test:security:step4": "node scripts/step4-security-integration.mjs",
     "import:rna": "node --experimental-strip-types scripts/import-rna.mjs"
   },
   "dependencies": {
@@ -33,6 +34,7 @@
     "eslint": "^9.35.0",
     "eslint-config-next": "^15.5.2",
     "iconv-lite": "^0.7.3",
+    "playwright": "^1.62.1",
     "supabase": "^2.39.2",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
