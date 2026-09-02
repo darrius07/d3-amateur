@@ -18,7 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               D3 Amateur
             </Link>
             <nav className="links" aria-label="Navigation principale">
-              <Link href="/">Accueil</Link>
+              <Link href="/clubs">Clubs</Link>
               <Link href="/admin">Admin</Link>
               <Link href="/login">Connexion</Link>
             </nav>
