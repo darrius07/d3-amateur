@@ -91,3 +91,17 @@ export async function cancelMatch(formData:FormData){
   if(error)throw error;
   revalidatePath('/club-studio');
 }
+
+export async function saveLineup(formData:FormData){
+  const clubId=String(formData.get('club_id'));
+  const matchId=String(formData.get('match_id'));
+  const teamSeasonId=String(formData.get('team_season_id'));
+  const {user,admin}=await ownerContext(clubId);
+  let entries:unknown;
+  try{entries=JSON.parse(String(formData.get('entries')||'[]'))}catch{throw new Error('Données de composition invalides')}
+  const {error}=await admin.rpc('save_match_lineup',{actor_id:user.id,p_match_id:matchId,p_team_season_id:teamSeasonId,p_entries:entries});
+  if(error)throw error;
+  revalidatePath(`/club-studio/matches/${matchId}/lineup`);
+  revalidatePath(`/matches/${matchId}`);
+  redirect(`/club-studio/matches/${matchId}/lineup?message=lineup-saved`);
+}

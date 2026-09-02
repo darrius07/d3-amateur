@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getMatch } from '@/lib/matches/data';
+import { getPublicMatchLineups, type PublicLineupEntry } from '@/lib/matches/lineup-data';
 import { formatKickoffParis } from '@/lib/matches/identity';
 
 type Props = { params: Promise<{ id: string }> };
@@ -21,12 +22,54 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : { title: 'Match introuvable · D3 Amateur' };
 }
 
+function LineupSide({ title, starters, bench }: { title: string; starters: PublicLineupEntry[]; bench: PublicLineupEntry[] }) {
+  if (starters.length === 0 && bench.length === 0) {
+    return (
+      <div className="lineup-side">
+        <h3>{title}</h3>
+        <p className="empty">Composition non renseignée.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="lineup-side">
+      <h3>{title}</h3>
+      <h4>Titulaires</h4>
+      {starters.length ? (
+        <ul className="public-lineup-list">
+          {starters.map((p) => (
+            <li key={p.playerId}>
+              <span>{p.squadNumber ?? '—'}</span>
+              <Link href={`/players/${p.slug}`}>{p.displayName}</Link>
+              {p.position && <small>{p.position}</small>}
+            </li>
+          ))}
+        </ul>
+      ) : <p className="empty">Aucun titulaire renseigné.</p>}
+      <h4>Remplaçants</h4>
+      {bench.length ? (
+        <ul className="public-lineup-list">
+          {bench.map((p) => (
+            <li key={p.playerId}>
+              <span>{p.squadNumber ?? '—'}</span>
+              <Link href={`/players/${p.slug}`}>{p.displayName}</Link>
+              {p.position && <small>{p.position}</small>}
+            </li>
+          ))}
+        </ul>
+      ) : <p className="empty">Aucun remplaçant renseigné.</p>}
+    </div>
+  );
+}
+
 export default async function MatchPage({ params }: Props) {
   const match = await getMatch((await params).id);
   if (!match) notFound();
+  const lineups = await getPublicMatchLineups(match.id, match.homeTeamSeasonId, match.awayTeamSeasonId);
 
   const played = match.status === 'PLAYED';
   const backHref = match.homeSlug ? `/clubs/${match.homeSlug}` : match.awaySlug ? `/clubs/${match.awaySlug}` : '/clubs';
+  const hasAnyLineup = lineups.home.starters.length + lineups.home.bench.length + lineups.away.starters.length + lineups.away.bench.length > 0;
 
   return (
     <main className="main match-page">
@@ -59,7 +102,11 @@ export default async function MatchPage({ params }: Props) {
       <div className="match-grid">
         <section className="panel">
           <h2>Composition</h2>
-          <p className="empty">Les détails joueurs seront disponibles lorsque le club aura complété la feuille de match.</p>
+          {hasAnyLineup && <p className="source-note">Composition renseignée par le club</p>}
+          <div className="lineup-sides">
+            <LineupSide title={match.homeDisplayName} starters={lineups.home.starters} bench={lineups.home.bench} />
+            <LineupSide title={match.awayDisplayName} starters={lineups.away.starters} bench={lineups.away.bench} />
+          </div>
         </section>
         <section className="panel">
           <h2>Buteurs</h2>
