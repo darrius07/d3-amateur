@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+:root { --ink: #14261d; --muted: #5d6c64; --line: #dce5df; --field: #f4f7f5; --accent: #d9ff57; }
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--ink); background: #fbfcfb; font-family: Arial, Helvetica, sans-serif; }
+a { color: inherit; text-decoration: none; }
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+.nav { height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(24px, calc((100vw - 1120px)/2)); border-bottom: 1px solid var(--line); background: rgba(251,252,251,.9); }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.03em; }
+.mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: var(--ink); color: var(--accent); font-size: 12px; }
+.links { display: flex; align-items: center; gap: 22px; color: var(--muted); font-size: 14px; }
+.main { width: min(1120px, calc(100% - 40px)); margin: auto; padding: 72px 0; }
+.eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: 12px; font-weight: 700; color: #557200; }
+h1 { max-width: 800px; font-size: clamp(44px, 7vw, 84px); line-height: .98; letter-spacing: -.065em; margin: 18px 0 24px; }
+.lead { max-width: 640px; color: var(--muted); font-size: clamp(17px, 2vw, 21px); line-height: 1.55; }
+.status { margin-top: 48px; display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 999px; background: white; font-size: 14px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #78a500; box-shadow: 0 0 0 4px #ecf7c9; }
+.card { max-width: 520px; padding: 30px; border: 1px solid var(--line); border-radius: 20px; background: white; box-shadow: 0 18px 50px rgba(20,38,29,.06); }
+.card h1 { font-size: 38px; margin-top: 0; }
+.field { width: 100%; margin-top: 8px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); font: inherit; }
+.button { display: inline-flex; justify-content: center; margin-top: 18px; padding: 12px 18px; border: 0; border-radius: 10px; background: var(--ink); color: white; font-weight: 700; cursor: pointer; }
+.message { margin-top: 16px; color: var(--muted); font-size: 14px; }
+@media (max-width: 640px) { .nav { padding: 0 20px; } .links a:not(:last-child) { display:none; } .main { padding: 48px 0; } }
