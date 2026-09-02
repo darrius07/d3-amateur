@@ -132,7 +132,10 @@ export function LineupEditor({
         <input type="hidden" name="club_id" value={clubId} />
         <input type="hidden" name="match_id" value={matchId} />
         <input type="hidden" name="team_season_id" value={teamSeasonId} />
-        <input type="hidden" name="entries" value={JSON.stringify(entries)} />
+        {/* save_match_lineup() reads snake_case JSON keys -- map at the wire
+            boundary, keep the in-memory LineupEntry shape camelCase for the
+            shared validateLineupEntries()/computeCompleteness() helpers. */}
+        <input type="hidden" name="entries" value={JSON.stringify(entries.map((e) => ({ player_id: e.playerId, lineup_role: e.lineupRole, position: e.position, squad_number: e.squadNumber })))} />
         <button className="button" disabled={!validation.valid}>Enregistrer la composition</button>
       </form>
     </div>
