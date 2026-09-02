@@ -68,8 +68,11 @@ export function MatchForm({ clubId, ourTeamSeasonId, initial }: { clubId: string
       <form action={editing ? updateMatch : createMatch} className="match-add-form">
         <input type="hidden" name="club_id" value={clubId} />
         {editing && <input type="hidden" name="match_id" value={initial!.matchId} />}
-        <input type="hidden" name="home_team_season_id" value={freeTextMode && homeAway === 'HOME' ? '' : homeTeamSeasonId} />
-        <input type="hidden" name="away_team_season_id" value={freeTextMode && homeAway === 'AWAY' ? '' : awayTeamSeasonId} />
+        {/* homeTeamSeasonId/awayTeamSeasonId already resolve to '' on whichever
+            side isn't ours when that side is a free-text opponent (selected
+            stays null in freeTextMode) -- no extra conditional needed here. */}
+        <input type="hidden" name="home_team_season_id" value={homeTeamSeasonId} />
+        <input type="hidden" name="away_team_season_id" value={awayTeamSeasonId} />
         <input type="hidden" name="external_opponent_name" value={freeTextMode ? freeTextName : ''} />
 
         <fieldset className="home-away">
