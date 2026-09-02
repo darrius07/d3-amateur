@@ -150,9 +150,11 @@ export interface MatchDetail {
   status: MatchStatus;
   homeScore: number | null;
   awayScore: number | null;
+  homeTeamSeasonId: string | null;
   homeDisplayName: string;
   homeSlug: string | null;
   homeLogoUrl: string | null;
+  awayTeamSeasonId: string | null;
   awayDisplayName: string;
   awaySlug: string | null;
   awayLogoUrl: string | null;
@@ -188,9 +190,11 @@ export async function getMatch(id: string): Promise<MatchDetail | null> {
     status: match.status,
     homeScore: match.home_score,
     awayScore: match.away_score,
+    homeTeamSeasonId: match.home_team_season_id,
     homeDisplayName: home?.name ?? match.external_opponent_name ?? "Adversaire",
     homeSlug: home?.slug ?? null,
     homeLogoUrl,
+    awayTeamSeasonId: match.away_team_season_id,
     awayDisplayName: away?.name ?? match.external_opponent_name ?? "Adversaire",
     awaySlug: away?.slug ?? null,
     awayLogoUrl,
