@@ -1,18 +1,2 @@
-export default function Home() {
-  return (
-    <main className="main" aria-labelledby="home-title">
-      <section className="hero">
-        <p className="eyebrow">Fondation technique</p>
-        <h1 id="home-title">Le football amateur, sur des bases solides.</h1>
-        <p className="lead">
-          D3 Amateur bâtit une plateforme indépendante, fiable et sécurisée pour les clubs,
-          les équipes et les saisons du football amateur.
-        </p>
-        <div className="status">
-          <span className="dot" aria-hidden="true" />
-          Step 1 · Fondation en cours
-        </div>
-      </section>
-    </main>
-  );
-}
+import Link from 'next/link';import {ClubSearch} from './clubs/club-search';
+export default function Home(){return <main className="main home"><p className="eyebrow">Le registre du football amateur</p><h1>Votre club.<br/>Votre histoire.</h1><p className="lead">Retrouvez les clubs de football amateur français dans un registre public, propre et indépendant.</p><ClubSearch compact/><Link className="browse-link" href="/clubs">Explorer le registre national →</Link></main>}

@@ -1,0 +1,4 @@
+import {createReadStream} from 'node:fs';import {writeFile} from 'node:fs/promises';import {parse} from 'csv-parse';import {stringify} from 'csv-stringify/sync';import iconv from 'iconv-lite';
+const [output,...files]=process.argv.slice(2);if(!output||!files.length)throw new Error('Usage: node scripts/extract-rna-sample.mjs output.csv input...');const sample=[];
+for(const file of files){const rows=createReadStream(file).pipe(iconv.decodeStream('win1252')).pipe(parse({columns:true,delimiter:';',relax_quotes:true,skip_empty_lines:true,bom:true,relax_column_count:true}));let count=0;for await(const row of rows){if(/foot(ball|\s*ball)|futsal/i.test(`${row.titre} ${row.objet}`)){sample.push(row);if(++count>=100)break}}}
+await writeFile(output,stringify(sample,{header:true,delimiter:';'}),'utf8');console.log(`sample_rows=${sample.length}`);
