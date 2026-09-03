@@ -2,6 +2,8 @@
 import crypto from 'node:crypto';import {redirect} from 'next/navigation';import {revalidatePath} from 'next/cache';import {createClient} from '@/lib/supabase/server';import {createAdminClient} from '@/lib/supabase/admin';import {clubLogoPath,validateLogo} from '@/lib/clubs/logo';import {playerSlug} from '@/lib/players/identity';import {parisLocalToUtcIso,validateOpponentShape,validateScore} from '@/lib/matches/identity';
 import {validateDisplayName,validateEmail,validateExternalUrl,validateFoundedYear,validateHexColor,validateLongDescription,validatePhone,validatePostalCode,validateShortDescription} from '@/lib/clubs/profile';
 import {validateCustomRole,validateShortBio,validateStaffDisplayName,type StaffRole} from '@/lib/staff/staff';
+import {validateCustomTierLabel,validateShortMessage,validateSponsorName,validateSponsorWebsite,type SponsorTier} from '@/lib/sponsors/sponsors';
+import {sponsorLogoPath} from '@/lib/sponsors/sponsor-logo';
 async function ownerContext(clubId:string){const auth=await createClient();const {data:{user}}=await auth.auth.getUser();if(!user)throw new Error('Non authentifié');const admin=createAdminClient();const {data:membership}=await admin.from('club_memberships').select('id').eq('club_id',clubId).eq('user_id',user.id).eq('role','OWNER').eq('active',true).maybeSingle();const {data:profile}=await admin.from('user_profiles').select('d3_admin_role').eq('id',user.id).maybeSingle();if(!membership&&!profile?.d3_admin_role)throw new Error('Accès refusé');return {user,admin}}
 export async function uploadClubLogo(formData:FormData){const clubId=String(formData.get('club_id'));const file=formData.get('logo');if(!(file instanceof File))throw new Error('Fichier requis');const {user,admin}=await ownerContext(clubId);const bytes=new Uint8Array(await file.arrayBuffer());const type=validateLogo({bytes,declaredMime:file.type,size:file.size});const path=clubLogoPath(clubId,crypto.randomUUID(),type.extension);const {data:club,error:clubError}=await admin.from('clubs').select('logo_path,slug').eq('id',clubId).single();if(clubError)throw clubError;const {error:uploadError}=await admin.storage.from('club-assets').upload(path,bytes,{contentType:type.mime,upsert:false});if(uploadError)throw uploadError;const {error:updateError}=await admin.from('clubs').update({logo_path:path,logo_source:'CLUB',logo_updated_at:new Date().toISOString()}).eq('id',clubId);if(updateError){await admin.storage.from('club-assets').remove([path]);throw updateError}if(club.logo_path&&club.logo_path.startsWith(`clubs/${clubId}/logo/`))await admin.storage.from('club-assets').remove([club.logo_path]);await admin.from('admin_audit_logs').insert({actor_user_id:user.id,action:club.logo_path?'logo_replaced':'logo_uploaded',entity_type:'club',entity_id:clubId,details:{before:{logo_path:club.logo_path},after:{logo_path:path},source:'CLUB'}});revalidatePath('/club-studio');revalidatePath(`/clubs/${club.slug}`)}
 export async function deleteClubLogo(formData:FormData){const clubId=String(formData.get('club_id'));const {user,admin}=await ownerContext(clubId);const {data:club,error}=await admin.from('clubs').select('logo_path,slug').eq('id',clubId).single();if(error)throw error;if(club.logo_path&&!club.logo_path.startsWith(`clubs/${clubId}/logo/`))throw new Error('Chemin asset invalide');await admin.from('clubs').update({logo_path:null,logo_source:null,logo_updated_at:new Date().toISOString()}).eq('id',clubId);if(club.logo_path)await admin.storage.from('club-assets').remove([club.logo_path]);await admin.from('admin_audit_logs').insert({actor_user_id:user.id,action:'logo_deleted',entity_type:'club',entity_id:clubId,details:{before:{logo_path:club.logo_path},after:{logo_path:null}}});revalidatePath('/club-studio');revalidatePath(`/clubs/${club.slug}`)}
@@ -295,4 +297,103 @@ export async function deactivateClubStaff(formData:FormData){
   if(error)throw error;
   await revalidateStaffPaths(admin,clubId);
   redirect(`/club-studio/staff?club_id=${clubId}&message=staff-removed`);
+}
+
+function readSponsorFields(formData:FormData){
+  const name=readText(formData,'name');
+  const websiteUrl=readText(formData,'website_url');
+  const tier=readText(formData,'tier') as SponsorTier;
+  const customTierLabel=readText(formData,'custom_tier_label');
+  const shortMessage=readText(formData,'short_message');
+  const publicVisible=formData.get('public_visible')==='on';
+  const checks=[validateSponsorName(name),validateSponsorWebsite(websiteUrl),validateShortMessage(shortMessage),validateCustomTierLabel(tier,customTierLabel)];
+  const firstError=checks.find(c=>!c.valid);
+  if(firstError)throw new Error(firstError.error);
+  return {name,websiteUrl,tier,customTierLabel,shortMessage,publicVisible};
+}
+
+async function revalidateSponsorPaths(admin:ReturnType<typeof createAdminClient>,clubId:string){
+  const {data:club}=await admin.from('clubs').select('slug').eq('id',clubId).single();
+  revalidatePath(`/club-studio/sponsors?club_id=${clubId}`);
+  revalidatePath('/club-studio');
+  if(club?.slug)revalidatePath(`/clubs/${club.slug}`);
+}
+
+/** Resolves the REAL club_id from the club_sponsor row itself -- never trusts the club_id a form field claims (mission section 25), which matters here specifically because ownerContext's authorization check is only as strong as the clubId it's given. */
+async function sponsorOwnerContext(clubSponsorId:string){
+  const admin=createAdminClient();
+  const {data:sponsorRow,error}=await admin.from('club_sponsors').select('club_id').eq('id',clubSponsorId).maybeSingle();
+  if(error)throw error;
+  if(!sponsorRow)throw new Error('Sponsor introuvable');
+  const {user}=await ownerContext(sponsorRow.club_id);
+  return {user,admin,clubId:sponsorRow.club_id};
+}
+
+export async function addClubSponsor(formData:FormData){
+  const clubId=String(formData.get('club_id'));
+  const {user,admin}=await ownerContext(clubId);
+  const fields=readSponsorFields(formData);
+  const {error}=await admin.rpc('add_club_sponsor',{
+    actor_id:user.id,target_club_id:clubId,p_name:fields.name,p_website_url:fields.websiteUrl,
+    p_tier:fields.tier,p_custom_tier_label:fields.customTierLabel,p_short_message:fields.shortMessage,p_public_visible:fields.publicVisible,
+  });
+  if(error)throw error;
+  await revalidateSponsorPaths(admin,clubId);
+  redirect(`/club-studio/sponsors?club_id=${clubId}&message=sponsor-added`);
+}
+
+export async function updateClubSponsor(formData:FormData){
+  const sponsorId=String(formData.get('sponsor_id'));
+  const {user,admin,clubId}=await sponsorOwnerContext(sponsorId);
+  const fields=readSponsorFields(formData);
+  const sortOrderRaw=readText(formData,'sort_order').trim();
+  const {error}=await admin.rpc('update_club_sponsor',{
+    actor_id:user.id,p_club_sponsor_id:sponsorId,p_name:fields.name,p_website_url:fields.websiteUrl,
+    p_tier:fields.tier,p_custom_tier_label:fields.customTierLabel,p_short_message:fields.shortMessage,
+    p_public_visible:fields.publicVisible,p_sort_order:sortOrderRaw?Number(sortOrderRaw):null,
+  });
+  if(error)throw error;
+  await revalidateSponsorPaths(admin,clubId);
+  redirect(`/club-studio/sponsors?club_id=${clubId}&message=sponsor-updated`);
+}
+
+export async function deactivateClubSponsor(formData:FormData){
+  const sponsorId=String(formData.get('sponsor_id'));
+  const {user,admin,clubId}=await sponsorOwnerContext(sponsorId);
+  const {error}=await admin.rpc('deactivate_club_sponsor',{actor_id:user.id,p_club_sponsor_id:sponsorId});
+  if(error)throw error;
+  await revalidateSponsorPaths(admin,clubId);
+  redirect(`/club-studio/sponsors?club_id=${clubId}&message=sponsor-removed`);
+}
+
+export async function uploadSponsorLogo(formData:FormData){
+  const sponsorId=String(formData.get('sponsor_id'));
+  const file=formData.get('logo');
+  if(!(file instanceof File))throw new Error('Fichier requis');
+  const {user,admin,clubId}=await sponsorOwnerContext(sponsorId);
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  const type=validateLogo({bytes,declaredMime:file.type,size:file.size});
+  const path=sponsorLogoPath(clubId,sponsorId,crypto.randomUUID(),type.extension);
+  const {data:existing,error:existingError}=await admin.from('club_sponsors').select('logo_path').eq('id',sponsorId).single();
+  if(existingError)throw existingError;
+  const {error:uploadError}=await admin.storage.from('sponsor-assets').upload(path,bytes,{contentType:type.mime,upsert:false});
+  if(uploadError)throw uploadError;
+  const {error:rpcError}=await admin.rpc('set_club_sponsor_logo',{actor_id:user.id,p_club_sponsor_id:sponsorId,p_logo_path:path,p_action:existing.logo_path?'sponsor_logo_replaced':'sponsor_logo_uploaded'});
+  if(rpcError){await admin.storage.from('sponsor-assets').remove([path]);throw rpcError}
+  if(existing.logo_path&&existing.logo_path.startsWith(`sponsors/${clubId}/${sponsorId}/`))await admin.storage.from('sponsor-assets').remove([existing.logo_path]);
+  await revalidateSponsorPaths(admin,clubId);
+  redirect(`/club-studio/sponsors?club_id=${clubId}&message=sponsor-logo-updated`);
+}
+
+export async function deleteSponsorLogo(formData:FormData){
+  const sponsorId=String(formData.get('sponsor_id'));
+  const {user,admin,clubId}=await sponsorOwnerContext(sponsorId);
+  const {data:existing,error:existingError}=await admin.from('club_sponsors').select('logo_path').eq('id',sponsorId).single();
+  if(existingError)throw existingError;
+  if(existing.logo_path&&!existing.logo_path.startsWith(`sponsors/${clubId}/${sponsorId}/`))throw new Error('Chemin asset invalide');
+  const {error:rpcError}=await admin.rpc('set_club_sponsor_logo',{actor_id:user.id,p_club_sponsor_id:sponsorId,p_logo_path:null,p_action:'sponsor_logo_deleted'});
+  if(rpcError)throw rpcError;
+  if(existing.logo_path)await admin.storage.from('sponsor-assets').remove([existing.logo_path]);
+  await revalidateSponsorPaths(admin,clubId);
+  redirect(`/club-studio/sponsors?club_id=${clubId}&message=sponsor-logo-removed`);
 }

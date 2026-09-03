@@ -20,6 +20,7 @@
     "test:security:step5c": "node scripts/step5c-security-integration.mjs",
     "test:security:step6a": "node scripts/step6a-security-integration.mjs",
     "test:security:step6b": "node scripts/step6b-security-integration.mjs",
+    "test:security:step6c": "node scripts/step6c-security-integration.mjs",
     "import:rna": "node --experimental-strip-types scripts/import-rna.mjs"
   },
   "dependencies": {
