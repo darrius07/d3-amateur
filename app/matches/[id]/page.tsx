@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getMatch } from '@/lib/matches/data';
 import { getPublicMatchLineups, type PublicLineupEntry } from '@/lib/matches/lineup-data';
+import { getPublicMatchTimeline } from '@/lib/matches/events-data';
 import { formatKickoffParis } from '@/lib/matches/identity';
+import { buildScorers, formatMinute } from '@/lib/matches/events';
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -13,6 +15,10 @@ const STATUS_LABELS: Record<string, string> = {
   PLAYED: 'Joué',
   POSTPONED: 'Reporté',
   CANCELLED: 'Annulé',
+};
+
+const EVENT_LABELS: Record<string, string> = {
+  GOAL: '⚽ But', OWN_GOAL: '⚽ Contre son camp', YELLOW_CARD: '🟨 Carton jaune', RED_CARD: '🔴 Carton rouge', SUBSTITUTION: '🔄 Remplacement',
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -65,7 +71,11 @@ function LineupSide({ title, starters, bench }: { title: string; starters: Publi
 export default async function MatchPage({ params }: Props) {
   const match = await getMatch((await params).id);
   if (!match) notFound();
-  const lineups = await getPublicMatchLineups(match.id, match.homeTeamSeasonId, match.awayTeamSeasonId);
+  const [lineups, timeline] = await Promise.all([
+    getPublicMatchLineups(match.id, match.homeTeamSeasonId, match.awayTeamSeasonId),
+    getPublicMatchTimeline(match.id, match.homeTeamSeasonId, match.awayTeamSeasonId),
+  ]);
+  const scorers = buildScorers(timeline);
 
   const played = match.status === 'PLAYED';
   const backHref = match.homeSlug ? `/clubs/${match.homeSlug}` : match.awaySlug ? `/clubs/${match.awaySlug}` : '/clubs';
@@ -110,11 +120,53 @@ export default async function MatchPage({ params }: Props) {
         </section>
         <section className="panel">
           <h2>Buteurs</h2>
-          <p className="empty">Les détails joueurs seront disponibles lorsque le club aura complété la feuille de match.</p>
+          {scorers.length ? (
+            <>
+              <p className="source-note">Événements renseignés par le club</p>
+              <ul className="scorers-list">
+                {scorers.map((s) => (
+                  <li key={s.playerId}>
+                    {s.playerSlug ? <Link href={`/players/${s.playerSlug}`}>{s.playerName}</Link> : <span>{s.playerName}</span>}
+                    {' — '}
+                    {s.goals.map((g, i) => (
+                      <span key={i}>{i > 0 ? ', ' : ''}{formatMinute(g.minute, g.addedTime)}{g.ownGoal ? ' (CSC)' : ''}</span>
+                    ))}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : <p className="empty">Aucun but documenté pour le moment.</p>}
         </section>
         <section className="panel">
           <h2>Événements</h2>
-          <p className="empty">Les détails joueurs seront disponibles lorsque le club aura complété la feuille de match.</p>
+          {timeline.length ? (
+            <>
+              <p className="source-note">Événements renseignés par le club</p>
+              <ul className="event-timeline-list">
+                {timeline.map((event) => (
+                  <li key={event.id}>
+                    <strong>{formatMinute(event.minute, event.addedTime)}</strong>
+                    {' — '}
+                    <span>{EVENT_LABELS[event.eventType] ?? event.eventType}</span>
+                    {' — '}
+                    {event.eventType === 'SUBSTITUTION' ? (
+                      <span>
+                        {event.primaryPlayerSlug ? <Link href={`/players/${event.primaryPlayerSlug}`}>{event.primaryPlayerName}</Link> : event.primaryPlayerName} sort ·{' '}
+                        {event.secondaryPlayerSlug ? <Link href={`/players/${event.secondaryPlayerSlug}`}>{event.secondaryPlayerName}</Link> : event.secondaryPlayerName} entre
+                      </span>
+                    ) : (
+                      <>
+                        {event.primaryPlayerSlug ? <Link href={`/players/${event.primaryPlayerSlug}`}>{event.primaryPlayerName}</Link> : <span>{event.primaryPlayerName}</span>}
+                        {event.eventType === 'GOAL' && event.secondaryPlayerName && (
+                          <small> · Passe : {event.secondaryPlayerSlug ? <Link href={`/players/${event.secondaryPlayerSlug}`}>{event.secondaryPlayerName}</Link> : event.secondaryPlayerName}</small>
+                        )}
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : <p className="empty">Les détails joueurs seront disponibles lorsque le club aura complété la feuille de match.</p>}
         </section>
       </div>
     </main>

@@ -105,3 +105,62 @@ export async function saveLineup(formData:FormData){
   revalidatePath(`/matches/${matchId}`);
   redirect(`/club-studio/matches/${matchId}/lineup?message=lineup-saved`);
 }
+
+function readEventFields(formData:FormData){
+  const matchId=String(formData.get('match_id'));
+  const primaryPlayerId=String(formData.get('primary_player_id')||'');
+  const secondaryPlayerId=String(formData.get('secondary_player_id')||'').trim()||null;
+  const minuteRaw=String(formData.get('minute')||'').trim();
+  const addedTimeRaw=String(formData.get('added_time')||'').trim();
+  const goalKind=String(formData.get('goal_kind')||'').trim()||null;
+  const cardKind=String(formData.get('card_kind')||'').trim()||null;
+  return {
+    matchId,primaryPlayerId,secondaryPlayerId,
+    minute:minuteRaw?Number(minuteRaw):null,
+    addedTime:addedTimeRaw?Number(addedTimeRaw):null,
+    goalKind,cardKind,
+  };
+}
+
+export async function createMatchEvent(formData:FormData){
+  const clubId=String(formData.get('club_id'));
+  const {user,admin}=await ownerContext(clubId);
+  const teamSeasonId=String(formData.get('team_season_id'));
+  const eventType=String(formData.get('event_type'));
+  const fields=readEventFields(formData);
+  const {error}=await admin.rpc('create_match_event',{
+    actor_id:user.id,p_match_id:fields.matchId,p_team_season_id:teamSeasonId,p_event_type:eventType,
+    p_primary_player_id:fields.primaryPlayerId,p_secondary_player_id:fields.secondaryPlayerId,
+    p_minute:fields.minute,p_added_time:fields.addedTime,p_goal_kind:fields.goalKind,p_card_kind:fields.cardKind,
+  });
+  if(error)throw error;
+  revalidatePath(`/club-studio/matches/${fields.matchId}/events`);
+  revalidatePath(`/matches/${fields.matchId}`);
+  redirect(`/club-studio/matches/${fields.matchId}/events?message=event-created`);
+}
+
+export async function updateMatchEvent(formData:FormData){
+  const clubId=String(formData.get('club_id'));
+  const {user,admin}=await ownerContext(clubId);
+  const eventId=String(formData.get('event_id'));
+  const fields=readEventFields(formData);
+  const {error}=await admin.rpc('update_match_event',{
+    actor_id:user.id,p_event_id:eventId,
+    p_primary_player_id:fields.primaryPlayerId,p_secondary_player_id:fields.secondaryPlayerId,
+    p_minute:fields.minute,p_added_time:fields.addedTime,p_goal_kind:fields.goalKind,p_card_kind:fields.cardKind,
+  });
+  if(error)throw error;
+  revalidatePath(`/club-studio/matches/${fields.matchId}/events`);
+  revalidatePath(`/matches/${fields.matchId}`);
+}
+
+export async function deleteMatchEvent(formData:FormData){
+  const clubId=String(formData.get('club_id'));
+  const {user,admin}=await ownerContext(clubId);
+  const matchId=String(formData.get('match_id'));
+  const eventId=String(formData.get('event_id'));
+  const {error}=await admin.rpc('delete_match_event',{actor_id:user.id,p_event_id:eventId});
+  if(error)throw error;
+  revalidatePath(`/club-studio/matches/${matchId}/events`);
+  revalidatePath(`/matches/${matchId}`);
+}
