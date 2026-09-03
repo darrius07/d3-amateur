@@ -152,17 +152,31 @@ export default async function ManageEventsPage({ params, searchParams }: Props) 
           </details>
 
           <details className="match-form">
-            <summary>Ajouter un carton</summary>
+            <summary>Ajouter un carton jaune</summary>
             <form action={createMatchEvent} className="roster-form">
               <input type="hidden" name="club_id" value={side.clubId} />
               <input type="hidden" name="match_id" value={matchId} />
               <input type="hidden" name="team_season_id" value={side.teamSeasonId} />
+              <input type="hidden" name="event_type" value="YELLOW_CARD" />
               <label>Joueur<select name="primary_player_id" required>{sheet.map((p) => <option key={p.playerId} value={p.playerId}>{p.displayName}</option>)}</select></label>
-              <label>Type<select name="event_type" defaultValue="YELLOW_CARD"><option value="YELLOW_CARD">Jaune</option><option value="RED_CARD">Rouge</option></select></label>
-              <label>Type de rouge (si rouge)<select name="card_kind" defaultValue="DIRECT"><option value="DIRECT">Direct</option><option value="SECOND_YELLOW">Deuxième jaune</option><option value="UNKNOWN">Inconnu</option></select></label>
               <label>Minute (facultatif)<input type="number" name="minute" min="0" max="130" /></label>
               <label>Temps additionnel<input type="number" name="added_time" min="0" max="15" /></label>
-              <button className="button">Ajouter le carton</button>
+              <button className="button">Ajouter le carton jaune</button>
+            </form>
+          </details>
+
+          <details className="match-form">
+            <summary>Ajouter un carton rouge</summary>
+            <form action={createMatchEvent} className="roster-form">
+              <input type="hidden" name="club_id" value={side.clubId} />
+              <input type="hidden" name="match_id" value={matchId} />
+              <input type="hidden" name="team_season_id" value={side.teamSeasonId} />
+              <input type="hidden" name="event_type" value="RED_CARD" />
+              <label>Joueur<select name="primary_player_id" required>{sheet.map((p) => <option key={p.playerId} value={p.playerId}>{p.displayName}</option>)}</select></label>
+              <label>Type de rouge<select name="card_kind" defaultValue="DIRECT"><option value="DIRECT">Direct</option><option value="SECOND_YELLOW">Deuxième jaune</option><option value="UNKNOWN">Inconnu</option></select></label>
+              <label>Minute (facultatif)<input type="number" name="minute" min="0" max="130" /></label>
+              <label>Temps additionnel<input type="number" name="added_time" min="0" max="15" /></label>
+              <button className="button">Ajouter le carton rouge</button>
             </form>
           </details>
 
