@@ -315,8 +315,15 @@ h1 {
 .missing-club-cta p{margin:0}
 .missing-club-cta-hint{margin-top:6px !important;font-weight:750;color:var(--ink)}
 .missing-club-cta .button{margin-top:14px}
-.missing-club-secondary{margin-top:14px;color:var(--muted);font-size:13px}
-.missing-club-secondary a{color:#557200;font-weight:750}
+/* Lives INSIDE .club-results (position:absolute -- a floating dropdown, not
+   in normal document flow) rather than as a sibling after it: a sibling
+   paragraph would sit underneath the dropdown's own box and become
+   unclickable, since .club-results renders on top of whatever follows it
+   in the layout. */
+.club-results-footer{border-top:1px solid var(--line);padding-top:4px}
+.club-results-footer a{display:block;padding:12px;border-radius:11px;color:var(--muted);font-size:13px}
+.club-results-footer a:hover{background:var(--field)}
+.club-results-footer strong{color:#557200;font-weight:750}
 
 /* --- Club creation request form -------------------------------------------- */
 .missing-club-form{max-width:640px}
