@@ -166,11 +166,29 @@ try{
   const noOwnerFromDup=await service.from('club_memberships').select('id').eq('club_id',existingClubId).eq('user_id',userBId);
   ok(noOwnerFromDup.data.length===0,'DUPLICATE decision grants NO membership to the requester');
 
-  // --- fresh re-verification at approval time (mission section 43) ---
+  // --- fresh re-verification at approval time (mission section 43) + failure
+  // atomicity (mission section 15): this deliberately provokes an error
+  // partway through approve_club_creation_request (after the admin-role
+  // check, the FOR UPDATE lock, and the slug/source lookups, but before any
+  // INSERT) and then asserts all three required post-conditions explicitly,
+  // not just "the call returned an error" -- 0 orphan club, 0 orphan OWNER
+  // membership, and the request left in a clean, non-APPROVED state. Postgres
+  // rolls back every write made during a single uncaught-exception plpgsql
+  // function call, so this also stands in for a later-stage failure (e.g. the
+  // club_memberships insert failing after the clubs insert already ran
+  // in-function) -- there is no clean way to force a failure strictly between
+  // those two statements from outside the RPC without touching the migration
+  // itself, which is out of scope for a security/integration smoke test.
   const lateDupReq=await asUserA.from('club_creation_requests').insert({requested_by:userAId,club_name:'Racing Club Nouveau',city:'Metz',representative_confirmation:true}).select('id').single();
   const lateClub=await service.from('clubs').insert({slug:`step6d-late-${suffix}`,official_name:'Racing Club Nouveau',display_name:'Racing Club Nouveau',city:'Metz',status:'active',claim_status:'unclaimed'}).select('id').single();
   r=await service.rpc('approve_club_creation_request',{actor_id:adminId,p_request_id:lateDupReq.data.id});
   ok(Boolean(r.error),'a matching club added AFTER submission but BEFORE approval blocks APPROVE (re-verified fresh, not from the stale snapshot)');
+  const lateReqAfter=await service.from('club_creation_requests').select('status,created_club_id').eq('id',lateDupReq.data.id).single();
+  ok(lateReqAfter.data.status==='PENDING_REVIEW'&&lateReqAfter.data.created_club_id===null,'failed approval leaves the request non-APPROVED with no created_club_id (clean transactional state)');
+  const orphanClubs=await service.from('clubs').select('id',{count:'exact',head:true}).eq('official_name','Racing Club Nouveau').neq('id',lateClub.data.id);
+  ok(orphanClubs.count===0,'failed approval created 0 orphan club');
+  const orphanMemberships=await service.from('club_memberships').select('id',{count:'exact',head:true}).eq('user_id',userAId).eq('club_id',lateClub.data.id);
+  ok(orphanMemberships.count===0,'failed approval granted 0 orphan OWNER membership on the pre-existing club');
   await service.from('clubs').delete().eq('id',lateClub.data.id);
 
   console.log(`PASS ${n} Step 6D club creation request assertions`);
@@ -191,6 +209,15 @@ try{
       await service.from('admin_audit_logs').delete().in('entity_id',sponsorRows.data.map(s=>s.id));
       await service.from('club_sponsors').delete().in('club_id',allClubIds);
       await service.from('sponsors').delete().in('id',sponsorRows.data.map(s=>s.sponsor_id));
+    }
+    // approve_club_creation_request's 'owner_granted_from_creation_request'
+    // audit row is keyed by membership_id (not club_id/request_id, e.g. the
+    // membershipId asserted on above) -- must be captured BEFORE
+    // club_memberships is deleted, or it orphans permanently (no FK from
+    // admin_audit_logs.entity_id in this shared Supabase project).
+    const membershipRows=await service.from('club_memberships').select('id').in('club_id',allClubIds);
+    if(membershipRows.data?.length){
+      await service.from('admin_audit_logs').delete().in('entity_id',membershipRows.data.map(m=>m.id));
     }
     await service.from('admin_audit_logs').delete().in('entity_id',allClubIds);
     await service.from('club_memberships').delete().in('club_id',allClubIds);

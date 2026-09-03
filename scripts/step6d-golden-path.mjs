@@ -20,7 +20,6 @@ const REQUESTER_EMAIL = process.env.STEP6D_REQUESTER_EMAIL;
 const OTHER_EMAIL = process.env.STEP6D_OTHER_EMAIL;
 const ADMIN_EMAIL = process.env.STEP6D_ADMIN_EMAIL;
 const ADMIN_ID = process.env.STEP6D_ADMIN_ID;
-const SUFFIX = process.env.STEP6D_SUFFIX;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -133,9 +132,17 @@ async function step(name, fn) {
 
   await step("11_admin_approves", async () => {
     await adminPage.locator('form:has(button:text("Approuver — créer le club")) button').click();
-    await adminPage.waitForTimeout(2500);
-    const text = await adminPage.locator("main").textContent();
-    return { showsApproved: (text?.includes("Approuvée") ?? false) || (text?.includes("Club créé") ?? false) };
+    // The server action's revalidatePath + soft-refresh round trip can take
+    // longer than a fixed wait on a cold Preview instance -- poll instead of
+    // a single timed snapshot to avoid a false negative on an otherwise-
+    // correct (DB-confirmed by step 12/13) approval.
+    let text = "";
+    for (let i = 0; i < 10; i++) {
+      text = (await adminPage.locator("main").textContent()) ?? "";
+      if (text.includes("Approuvée") || text.includes("Club créé")) break;
+      await adminPage.waitForTimeout(500);
+    }
+    return { showsApproved: text.includes("Approuvée") || text.includes("Club créé") };
   });
 
   let newClubSlug, newClubId;

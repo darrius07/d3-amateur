@@ -199,6 +199,13 @@ export async function getClubCreationRequestForAdmin(id: string): Promise<AdminC
   const clubById = new Map(clubs.map((c) => [c.id, c]));
   const createdClub = row.created_club_id ? clubById.get(row.created_club_id) : undefined;
   const duplicateClub = row.duplicate_candidate_club_id ? clubById.get(row.duplicate_candidate_club_id) : undefined;
+  // Once APPROVED, the club this very request created will always
+  // self-match find_duplicate_club_candidates (identical name + city) --
+  // that is the confirmed outcome, not a "possible duplicate" of it, so it
+  // must never show up as a fresh/new duplicate warning on its own request.
+  const freshDuplicatesExcludingOwnCreatedClub = row.created_club_id
+    ? freshDuplicates.filter((c) => c.id !== row.created_club_id)
+    : freshDuplicates;
 
   return {
     id: row.id, status: row.status, clubName: row.club_name, shortName: row.short_name, city: row.city, postalCode: row.postal_code,
@@ -212,7 +219,7 @@ export async function getClubCreationRequestForAdmin(id: string): Promise<AdminC
       ? { id: duplicateClub.id, slug: duplicateClub.slug, displayName: duplicateClub.display_name, city: duplicateClub.city, claimStatus: duplicateClub.claim_status }
       : null,
     duplicateReviewState: row.duplicate_review_state,
-    freshDuplicateCandidates: freshDuplicates,
+    freshDuplicateCandidates: freshDuplicatesExcludingOwnCreatedClub,
   };
 }
 

@@ -52,6 +52,14 @@ if(mode==='setup'){
       await service.from('club_sponsors').delete().in('club_id',clubIds);
       await service.from('sponsors').delete().in('id',sponsorRows.data.map(s=>s.sponsor_id));
     }
+    // approve_club_creation_request's 'owner_granted_from_creation_request'
+    // audit row is keyed by membership_id, not club_id/request_id -- must be
+    // captured BEFORE club_memberships is deleted, or it orphans permanently
+    // (this shared Supabase project has no FK from admin_audit_logs.entity_id).
+    const membershipRows=await service.from('club_memberships').select('id').in('club_id',clubIds);
+    if(membershipRows.data?.length){
+      await service.from('admin_audit_logs').delete().in('entity_id',membershipRows.data.map(m=>m.id));
+    }
     await service.from('club_profiles').delete().in('club_id',clubIds);
     await service.from('admin_audit_logs').delete().in('entity_id',clubIds);
     await service.from('club_memberships').delete().in('club_id',clubIds);

@@ -55,11 +55,11 @@ async function step(name, fn) {
     await page.fill("#club-search", EXISTING_CLUB_NAME);
     await page.waitForTimeout(1800);
     const text = await page.locator(".club-results").textContent().catch(() => "");
-    return { foundExistingClub: text?.includes(EXISTING_CLUB_NAME) ?? false, hasSecondaryCta: (await page.locator(".missing-club-secondary a").count()) > 0 };
+    return { foundExistingClub: text?.includes(EXISTING_CLUB_NAME) ?? false, hasSecondaryCta: (await page.locator(".club-results-footer a").count()) > 0 };
   });
 
   await step("3_secondary_path_to_add_my_club", async () => {
-    await page.locator(".missing-club-secondary a").click();
+    await page.locator(".club-results-footer a").click();
     await page.waitForURL((u) => u.pathname === "/clubs/new", { timeout: 20000 });
     return page.url();
   });
