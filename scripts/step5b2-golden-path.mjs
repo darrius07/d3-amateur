@@ -62,12 +62,11 @@ async function step(name, fn) {
   });
 
   await step("add_yellow_card", async () => {
-    const details = page.locator('details.match-form:has(summary:text("Ajouter un carton"))').first();
+    const details = page.locator('details.match-form:has(summary:text("Ajouter un carton jaune"))').first();
     await details.locator("summary").click();
     await page.waitForTimeout(300);
     const form = details.locator("form");
     await form.locator('select[name="primary_player_id"]').selectOption({ index: 2 });
-    await form.locator('select[name="event_type"]').selectOption("YELLOW_CARD");
     await form.locator('input[name="minute"]').fill("30");
     await Promise.all([
       page.waitForURL((u) => u.search.includes("message=event-created"), { timeout: 20000 }).catch(() => null),
@@ -79,12 +78,13 @@ async function step(name, fn) {
 
   await step("add_substitution", async () => {
     const details = page.locator('details.match-form:has(summary:text("Ajouter un remplacement"))').first();
+    await details.scrollIntoViewIfNeeded();
     await details.locator("summary").click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(600);
     const form = details.locator("form");
-    await form.locator('select[name="primary_player_id"]').selectOption({ index: 0 });
-    await form.locator('select[name="secondary_player_id"]').selectOption({ index: 3 });
-    await form.locator('input[name="minute"]').fill("67");
+    await form.locator('select[name="primary_player_id"]').first().selectOption({ index: 0 });
+    await form.locator('select[name="secondary_player_id"]').first().selectOption({ index: 3 });
+    await form.locator('input[name="minute"]').first().fill("67");
     await Promise.all([
       page.waitForURL((u) => u.search.includes("message=event-created"), { timeout: 20000 }).catch(() => null),
       form.locator("button.button").click(),
