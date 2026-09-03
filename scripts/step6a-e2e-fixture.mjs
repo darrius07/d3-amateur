@@ -22,7 +22,11 @@ if(mode==='setup'){
   const suffix=process.argv[3];if(!suffix)throw new Error('suffix required');
   const listed=await service.auth.admin.listUsers({perPage:1000});
   const users=listed.data.users.filter(u=>u.email?.includes(`step6a-e2e-${suffix}-`));
-  const clubs=await service.from('clubs').select('id').ilike('slug',`d3-test-club-step6a-e2e-${suffix}%`);
+  // Matches both `...step6a-e2e-<suffix>` (the main club) and
+  // `...step6a-e2e-other-<suffix>` (the intruder's second club) -- a bare
+  // prefix match on the suffix alone missed the latter, leaving it
+  // orphaned after every run (found by an independent residue check).
+  const clubs=await service.from('clubs').select('id').ilike('slug',`d3-test-club-step6a-e2e-%${suffix}`);
   const clubIds=(clubs.data??[]).map(c=>c.id);
   if(clubIds.length){
     await service.from('club_profiles').delete().in('club_id',clubIds);
