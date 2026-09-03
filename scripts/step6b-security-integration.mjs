@@ -27,7 +27,6 @@ try{
   const coachId=r.data;
   r=await service.rpc('add_club_staff',{actor_id:ownerAId,target_club_id:clubAId,p_team_season_id:teamSeasonA,p_display_name:'Paul Durand',p_role_type:'ASSISTANT_COACH',p_custom_role:null,p_short_bio:null,p_public_visible:false});
   ok(!r.error,'OWNER A creates a private (public_visible=false) staff member');
-  const assistantId=r.data;
 
   // --- Role / OTHER validation ---
   r=await service.rpc('add_club_staff',{actor_id:ownerAId,target_club_id:clubAId,p_team_season_id:null,p_display_name:'X',p_role_type:'OTHER',p_custom_role:null,p_short_bio:null,p_public_visible:false});
