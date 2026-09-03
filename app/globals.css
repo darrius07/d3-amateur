@@ -299,4 +299,60 @@ h1 {
 .sponsor-list small{color:var(--muted);font-size:12px}
 .sponsor-list p{margin:3px 0 0;font-size:13px;line-height:1.5;color:var(--ink);max-width:56ch}
 
+/* ============================================================================
+   Step 6D: missing club / create club. Same "Vestiaire numérique" language
+   as the rest of D3 -- a reassuring, simple request flow, never an FFF-style
+   bureaucratic form. The duplicate-candidate screen reuses .identity-card
+   verbatim (same avatar/logo placeholder language as everywhere else) so a
+   possible match reads as "the same product", not a bolted-on warning page.
+   ============================================================================ */
+
+.text-link{color:#557200;font-weight:750}
+.button-secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+
+/* --- Search empty-state / secondary CTA (mission sections 36-37) ---------- */
+.missing-club-cta{margin-top:18px;padding:22px;border:1px dashed var(--line);border-radius:16px;text-align:center;color:var(--muted)}
+.missing-club-cta p{margin:0}
+.missing-club-cta-hint{margin-top:6px !important;font-weight:750;color:var(--ink)}
+.missing-club-cta .button{margin-top:14px}
+.missing-club-secondary{margin-top:14px;color:var(--muted);font-size:13px}
+.missing-club-secondary a{color:#557200;font-weight:750}
+
+/* --- Club creation request form -------------------------------------------- */
+.missing-club-form{max-width:640px}
+.missing-club-form label{display:block;margin-top:16px;font-weight:700;font-size:14px}
+.missing-club-form label:first-of-type{margin-top:20px}
+.missing-club-scope-note{margin-top:20px;padding:12px 14px;border-radius:10px;background:var(--field);color:var(--muted);font-size:13px;line-height:1.5;font-weight:400}
+.confirmation-toggle{display:flex;align-items:flex-start;gap:10px;margin-top:22px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--field);font-weight:700;font-size:14px;line-height:1.4}
+.confirmation-toggle input{width:auto;flex-shrink:0;margin-top:3px}
+
+/* --- Duplicate candidate screen (mission sections 13-14) ------------------- */
+.duplicate-candidate-card{max-width:640px}
+.duplicate-candidate-card .identity-card{margin-top:20px}
+.duplicate-candidate-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:10px}
+.duplicate-candidate-actions .button{margin-top:0}
+.duplicate-candidate-divider{margin:28px 0;border:0;border-top:1px solid var(--line)}
+.duplicate-candidate-card form .button{width:100%}
+
+/* --- Admin: club creation requests ------------------------------------------ */
+.admin-filters{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0;padding:0}
+.admin-filters a{padding:8px 14px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:13px;font-weight:700}
+.admin-filters a.admin-filter-active{background:var(--ink);border-color:var(--ink);color:var(--accent)}
+.admin-detail-list{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:12px 0 0}
+.admin-detail-list dt{color:var(--muted);font-size:13px;font-weight:700}
+.admin-detail-list dd{margin:0;font-size:14px}
+.admin-decision-form{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.admin-decision-form label{display:block;margin-top:12px;font-weight:700;font-size:13px}
+.admin-decision-buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.admin-decision-buttons button,.admin-decision-form>.button{padding:9px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font-weight:700;font-size:13px}
+.admin-decision-form>.button{background:var(--ink);color:#fff;border-color:var(--ink)}
+.admin-decision-buttons .danger{color:#a33131;border-color:#a33131}
+
+@media (max-width:640px){
+  .duplicate-candidate-actions{flex-direction:column;align-items:stretch}
+  .duplicate-candidate-actions .button,.duplicate-candidate-actions .text-link{text-align:center}
+  .admin-detail-list{grid-template-columns:1fr}
+  .admin-detail-list dt{margin-top:10px}
+}
+
 @media (max-width:720px){.sponsor-list a,.sponsor-static{align-items:flex-start}}
