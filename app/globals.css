@@ -170,7 +170,7 @@ h1 {
 
 /* --- Profile editor layout -------------------------------------------------- */
 .profile-editor{display:grid;gap:28px;margin-top:28px;align-items:start;grid-template-areas:"preview" "form"}
-.profile-editor-form{grid-area:form}
+.profile-editor-form{grid-area:form;padding-bottom:88px}
 .profile-editor>.preview-card{grid-area:preview}
 .profile-editor-form{display:grid;gap:20px;min-width:0}
 .profile-section{padding:24px;border:1px solid var(--line);border-radius:18px;background:#fff}
@@ -217,9 +217,9 @@ h1 {
 @media (prefers-reduced-motion: reduce){.preview-body{transition:none}}
 
 /* --- Public club page: hero identity + new sections ------------------------ */
-.club-hero{position:relative}
+.club-hero{position:relative;overflow:hidden}
 .club-hero-halo{position:absolute;inset:-40px auto auto -40px;width:220px;height:220px;border-radius:50%;filter:blur(10px);opacity:.16;pointer-events:none;z-index:0}
-.club-hero>*{position:relative;z-index:1}
+.club-hero>*:not(.club-hero-halo){position:relative;z-index:1}
 .club-tagline{margin:10px 0 0;max-width:60ch;font-size:16px;line-height:1.5;color:var(--ink)}
 .club-founded{color:var(--muted)}
 .social-row{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
