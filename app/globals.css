@@ -129,3 +129,108 @@ h1 {
 /* Step 5C: derived player stats. Stat lines are plain stacked text (never a table), so they stay readable at any width down to 390px with no extra CSS beyond block layout. */
 .player-stats-line{display:block;margin-top:4px;color:var(--muted);font-size:12px}
 .derived-tag{color:#8a968f;font-style:italic}
+
+/* ============================================================================
+   Step 6A: club profile & identity. "Vestiaire numérique" -- the same
+   editorial, sporty-premium language as the rest of D3 Amateur (dark ink on
+   soft mint, lime accent used sparingly, big confident type, generous
+   whitespace, .panel cards) extended into an identity-building experience:
+   a single completeness ring, a real personalization editor with a live
+   preview, and a public hero that a club's own colors can accent -- never a
+   generic SaaS dashboard, never a user-supplied gradient.
+   ============================================================================ */
+
+/* --- Identity card (Club Studio) ------------------------------------------ */
+.identity-card{display:flex;flex-wrap:wrap;align-items:center;gap:28px;padding:28px;margin-top:20px;border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:0 16px 45px rgba(20,38,29,.06)}
+.identity-card-logo{flex-shrink:0;display:block;width:84px;height:84px;object-fit:contain;border:1px solid var(--line);border-radius:20px;background:#fff}
+.identity-card-logo-placeholder{display:grid;place-items:center;background:var(--ink);color:var(--accent);font-size:20px;font-weight:900}
+.identity-card-body{flex:1 1 220px;min-width:0}
+.identity-card-body h2{margin:6px 0 2px;font-size:26px;letter-spacing:-.02em}
+.identity-card-meta{color:var(--muted);font-size:14px}
+.identity-card-cta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.identity-card-cta .button{margin-top:0;white-space:nowrap}
+.identity-card-cta-hint{color:var(--muted);font-size:12px;max-width:220px}
+
+/* --- Completeness ring + checklist ----------------------------------------- */
+.completeness-ring{position:relative;display:grid;place-items:center;width:96px;height:96px;flex-shrink:0}
+.completeness-ring svg{transform:rotate(-90deg)}
+.completeness-ring-track{fill:none;stroke:var(--line);stroke-width:8}
+.completeness-ring-progress{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+.completeness-ring-label{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1.15}
+.completeness-ring-label strong{font-size:19px;letter-spacing:-.02em;color:var(--ink)}
+.completeness-ring-label span{font-size:11px;color:var(--muted)}
+.completeness-ring--complete .completeness-ring-progress{animation:d3-ring-pop .5s ease}
+@media (prefers-reduced-motion: reduce){.completeness-ring-progress{transition:none}.completeness-ring--complete .completeness-ring-progress{animation:none}}
+@keyframes d3-ring-pop{0%{stroke-width:8}45%{stroke-width:11}100%{stroke-width:8}}
+.completeness-checklist{display:grid;gap:7px;margin:0;padding:0;list-style:none;font-size:13px;color:var(--muted)}
+.completeness-checklist li{display:flex;align-items:center;gap:8px}
+.completeness-checklist li span{display:inline-grid;place-items:center;width:16px;height:16px;font-size:11px;color:var(--line)}
+.completeness-checklist li.is-done{color:var(--ink);font-weight:650}
+.completeness-checklist li.is-done span{color:#557200}
+
+/* --- Profile editor layout -------------------------------------------------- */
+.profile-editor{display:grid;gap:28px;margin-top:28px;align-items:start;grid-template-areas:"preview" "form"}
+.profile-editor-form{grid-area:form}
+.profile-editor>.preview-card{grid-area:preview}
+.profile-editor-form{display:grid;gap:20px;min-width:0}
+.profile-section{padding:24px;border:1px solid var(--line);border-radius:18px;background:#fff}
+.profile-section h2{margin:0 0 3px;font-size:19px;letter-spacing:-.01em}
+.profile-section-hint{margin:0 0 18px;color:var(--muted);font-size:13px}
+.profile-field{display:block;margin-top:16px;font-weight:700;font-size:14px}
+.profile-field:first-child{margin-top:0}
+.profile-field input[type=text],.profile-field input[type=email],.profile-field input[type=tel],.profile-field input[type=number],.profile-field input[type=url],.profile-field textarea{display:block;width:100%;margin-top:7px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--field);font:inherit;font-weight:400;font-size:15px;color:var(--ink)}
+.profile-field textarea{min-height:90px;resize:vertical}
+.profile-field input:focus,.profile-field textarea:focus{outline:2px solid #829d24;outline-offset:1px;background:#fff}
+.profile-field-sub{margin:5px 0 0;font-weight:400;font-size:12px;color:var(--muted)}
+.char-counter{display:block;margin-top:5px;text-align:right;font-weight:400;font-size:11px;color:var(--muted)}
+.char-counter.is-over{color:#a33131;font-weight:700}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field-grid .profile-field{margin-top:0}
+
+/* --- Color pickers ----------------------------------------------------------- */
+.color-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px}
+.color-field-control{display:flex;align-items:center;gap:10px;margin-top:7px}
+.color-swatch{flex-shrink:0;width:44px;height:44px;padding:0;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:none}
+.color-field-control input[type=text]{margin-top:0;text-transform:uppercase}
+.color-error{display:block;margin-top:5px;color:#a33131;font-size:12px;font-weight:600}
+
+/* --- Save bar ------------------------------------------------------------- */
+.save-bar{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:4px;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);box-shadow:0 -10px 30px rgba(20,38,29,.06)}
+.save-bar .button{margin-top:0}
+.save-bar-status{font-size:13px;color:var(--muted)}
+.save-bar-status.is-dirty{color:#7a5b00;font-weight:700}
+
+/* --- Live preview ----------------------------------------------------------- */
+.preview-card{position:sticky;top:20px;padding:0;border:1px solid var(--line);border-radius:20px;background:#fff;overflow:hidden;box-shadow:0 16px 45px rgba(20,38,29,.06)}
+.preview-card-label{display:block;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--field);color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.preview-body{padding:24px;border-top:4px solid var(--line);transition:border-color .3s ease}
+.preview-header{display:flex;align-items:center;gap:16px}
+.preview-logo{flex-shrink:0;display:grid;place-items:center;width:64px;height:64px;border-radius:16px;background:var(--ink);color:var(--accent);font-size:20px;font-weight:900;overflow:hidden}
+.preview-logo img{width:100%;height:100%;object-fit:contain}
+.preview-header h3{margin:0 0 2px;font-size:20px;letter-spacing:-.02em}
+.preview-header p{margin:0;color:var(--muted);font-size:13px}
+.preview-tagline{margin:16px 0 0;font-size:14px;line-height:1.5}
+.preview-swatches{display:flex;gap:8px;margin-top:16px}
+.preview-swatch{width:26px;height:26px;border-radius:8px;border:1px solid rgba(20,38,29,.1)}
+.preview-social-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.preview-social-row span{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--field);color:var(--ink)}
+@media (prefers-reduced-motion: reduce){.preview-body{transition:none}}
+
+/* --- Public club page: hero identity + new sections ------------------------ */
+.club-hero{position:relative}
+.club-hero-halo{position:absolute;inset:-40px auto auto -40px;width:220px;height:220px;border-radius:50%;filter:blur(10px);opacity:.16;pointer-events:none;z-index:0}
+.club-hero>*{position:relative;z-index:1}
+.club-tagline{margin:10px 0 0;max-width:60ch;font-size:16px;line-height:1.5;color:var(--ink)}
+.club-founded{color:var(--muted)}
+.social-row{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.social-row a{display:flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;color:var(--ink);font-size:13px;font-weight:700;transition:border-color .15s ease,background .15s ease}
+.social-row a:hover,.social-row a:focus-visible{border-color:#829d24;background:var(--field)}
+.venue-block strong{display:block;font-size:17px;margin-bottom:4px}
+.venue-block address{margin:0;font-style:normal;color:var(--muted);font-size:14px;line-height:1.5}
+.contact-block{display:grid;gap:8px;font-size:14px}
+.contact-block a{font-weight:700}
+.studio-empty-cta{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 18px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-size:13px}
+.studio-empty-cta a{font-weight:800;color:#557200;white-space:nowrap}
+
+@media (min-width:1000px){.profile-editor{grid-template-columns:1.5fr 1fr;grid-template-areas:"form preview"}}
+@media (max-width:720px){.identity-card{padding:20px;gap:18px}.identity-card-logo{width:64px;height:64px}.identity-card-body h2{font-size:21px}.field-grid,.color-fields{grid-template-columns:1fr}.preview-card{position:static}.save-bar{flex-direction:column;align-items:stretch}.club-hero-halo{width:140px;height:140px;inset:-24px auto auto -24px}}
