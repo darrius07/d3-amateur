@@ -36,14 +36,16 @@ describe("validateHexColor (color validation)", () => {
   it("rejects a missing #", () => expect(validateHexColor("0057B8").valid).toBe(false));
 });
 
-describe("validateExternalUrl (URL validation / security)", () => {
+describe("validateExternalUrl (URL validation / security -- https:// only)", () => {
   it("accepts empty (nullable)", () => expect(validateExternalUrl("").valid).toBe(true));
   it("accepts https", () => expect(validateExternalUrl("https://instagram.com/asmontex").valid).toBe(true));
-  it("accepts http", () => expect(validateExternalUrl("http://example.com").valid).toBe(true));
+  it("accepts an uppercase HTTPS scheme", () => expect(validateExternalUrl("HTTPS://example.com").valid).toBe(true));
+  it("rejects http (https-only per mission requirement)", () => expect(validateExternalUrl("http://example.com").valid).toBe(false));
   it("rejects javascript: URLs", () => expect(validateExternalUrl("javascript:alert(1)").valid).toBe(false));
   it("rejects data: URLs", () => expect(validateExternalUrl("data:text/html;base64,x").valid).toBe(false));
   it("rejects file: URLs", () => expect(validateExternalUrl("file:///etc/passwd").valid).toBe(false));
   it("rejects an arbitrary scheme", () => expect(validateExternalUrl("ftp://x.com").valid).toBe(false));
+  it("rejects a protocol-relative URL", () => expect(validateExternalUrl("//example.com").valid).toBe(false));
   it("rejects a URL containing a space", () => expect(validateExternalUrl("https://example.com/a b").valid).toBe(false));
   it("rejects a URL breaking out of an HTML attribute", () => expect(validateExternalUrl(`https://x.com"onmouseover=alert(1)`).valid).toBe(false));
   it("rejects an oversized URL", () => expect(validateExternalUrl("https://x.com/" + "a".repeat(2050)).valid).toBe(false));

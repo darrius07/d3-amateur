@@ -25,17 +25,18 @@ export function validateHexColor(raw: string | null | undefined): ValidationResu
   return { valid: true };
 }
 
-// https/http only, no javascript:/data:/file:/arbitrary scheme, no
-// whitespace or characters that could break out of an HTML attribute --
-// mirrors is_safe_external_url() exactly (mission section 19).
-const SAFE_URL_PATTERN = /^https?:\/\/[^\s<>"']+$/i;
+// https:// ONLY (mission requirement) -- no http://, no javascript:/data:/
+// file:/ftp:/arbitrary scheme, no protocol-relative "//host", no whitespace
+// or characters that could break out of an HTML attribute. Mirrors
+// is_safe_external_url() exactly.
+const SAFE_URL_PATTERN = /^https:\/\/[^\s<>"']+$/i;
 
 /** Mirrors is_safe_external_url(). Empty is valid (nullable). */
 export function validateExternalUrl(raw: string | null | undefined): ValidationResult {
   const value = (raw ?? "").trim();
   if (!value) return { valid: true };
   if (value.length > 2048) return { valid: false, error: "Lien trop long" };
-  if (!SAFE_URL_PATTERN.test(value)) return { valid: false, error: "Lien invalide — doit commencer par https:// ou http://" };
+  if (!SAFE_URL_PATTERN.test(value)) return { valid: false, error: "Lien invalide — doit commencer par https://" };
   return { valid: true };
 }
 

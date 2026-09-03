@@ -53,16 +53,34 @@ try{
   let rauthUpdate=await asOwnerA.from('club_profiles').update({primary_color:'#000000'}).eq('club_id',clubAId);
   ok(Boolean(rauthUpdate.error),'authenticated OWNER cannot UPDATE club_profiles directly either -- update_club_profile is the only write path');
 
-  // --- Public read (anon) ---
-  let ranon=await anon.from('club_profiles').select('short_description,primary_color,public_email').eq('club_id',clubAId).single();
-  ok(ranon.data?.short_description==='Le club qui monte','anon can publicly read club_profiles');
+  // --- Public read (anon) -- via club_profiles_public, the only surface anon/authenticated can reach ---
+  let ranon=await anon.from('club_profiles_public').select('short_description,primary_color,public_email').eq('club_id',clubAId).single();
+  ok(ranon.data?.short_description==='Le club qui monte','anon can publicly read club_profiles_public');
   ok(ranon.data?.public_email==='contact@smokefc.example.com','anon can read the explicitly-published public_email (it exists only because OWNER typed it)');
+
+  // --- GAP 2 (closure): updated_by must never reach anon/authenticated ---
+  let ranonBase=await anon.from('club_profiles').select('updated_by').eq('club_id',clubAId).maybeSingle();
+  ok(Boolean(ranonBase.error),'anon cannot SELECT club_profiles (the base table) at all -- updated_by is unreachable, not merely unrendered');
+  let rauthBase=await asOwnerA.from('club_profiles').select('updated_by').eq('club_id',clubAId).maybeSingle();
+  ok(Boolean(rauthBase.error),'authenticated (even the OWNER) cannot SELECT club_profiles directly either -- must go through club_profiles_public');
+  let ranonViewStar=await anon.from('club_profiles_public').select('*').eq('club_id',clubAId).single();
+  ok(!Object.prototype.hasOwnProperty.call(ranonViewStar.data??{},'updated_by'),'club_profiles_public never exposes updated_by, even via select(*)');
+  const serviceStillSees=await service.from('club_profiles').select('updated_by').eq('club_id',clubAId).single();
+  ok(typeof serviceStillSees.data?.updated_by==='string','service_role (admin/server) still has full access to updated_by -- only anon/authenticated are blocked');
 
   // --- Public/private separation (mission section 37) ---
   const columns=Object.keys((await service.from('club_profiles').select('*').eq('club_id',clubAId).single()).data);
   const forbidden=['auth_email','claim_note','admin_note','evidence','password'];
   ok(!columns.some(c=>forbidden.some(f=>c.toLowerCase().includes(f))),'no private/internal column exists on club_profiles by construction');
   ok(ranon.data.public_email!==emailA,"the published public_email is never silently the OWNER's own Auth email");
+
+  // --- GAP 1 (closure): https:// only, no http:// ---
+  r=await service.rpc('update_club_profile',{...validArgs(clubAId,ownerAId),p_website_url:'http://smokefc.example.com'});
+  ok(Boolean(r.error),'http:// rejected (https-only per mission requirement)');
+  r=await service.rpc('update_club_profile',{...validArgs(clubAId,ownerAId),p_instagram_url:'//instagram.com/smokefc'});
+  ok(Boolean(r.error),'protocol-relative "//host" URL rejected');
+  r=await service.rpc('update_club_profile',{...validArgs(clubAId,ownerAId),p_website_url:'HTTPS://SmokeFC.example.com'});
+  ok(!r.error,'uppercase HTTPS scheme still accepted (case-insensitive)');
 
   // --- Validations (mission section 34) ---
   r=await service.rpc('update_club_profile',{...validArgs(clubAId,ownerAId),p_primary_color:'blue'});
