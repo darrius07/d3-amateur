@@ -36,7 +36,7 @@ export async function getClubRosters(clubId:string):Promise<ClubRosterTeam[]>{
 }
 
 export interface PlayerRegistration{id:string;status:string;verification_status:string;season_id:string;club_id:string;seasons:{label:string;start_date:string}|null;clubs:{display_name:string;slug:string;city:string|null}|null}
-export interface PlayerRosterEntry{id:string;primary_position:string|null;squad_number:number|null;team_seasons:{season_id:string;club_id:string|null;teams:{display_name:string;club_id:string}|null}|null}
+export interface PlayerRosterEntry{id:string;team_season_id:string;primary_position:string|null;squad_number:number|null;team_seasons:{season_id:string;club_id:string|null;teams:{display_name:string;club_id:string}|null}|null}
 export interface PlayerDetail{id:string;slug:string;first_name:string;last_name:string;display_name:string;normalized_name:string;primary_position:string|null;profile_status:string;claim_status:string;created_at:string;updated_at:string;registrations:PlayerRegistration[];rosters:PlayerRosterEntry[]}
 
 export async function getPlayer(slug:string):Promise<PlayerDetail|null>{
@@ -45,7 +45,7 @@ export async function getPlayer(slug:string):Promise<PlayerDetail|null>{
   if(error)throw error;
   if(!player)return null;
   const {data:registrations}=await admin.from('player_registrations').select('id,status,verification_status,season_id,club_id,seasons(label,start_date),clubs(display_name,slug,city)').eq('player_id',player.id).order('created_at',{ascending:false});
-  const {data:rosters}=await admin.from('team_roster_members').select('id,primary_position,squad_number,team_seasons(season_id,teams(display_name,club_id))').eq('player_id',player.id).eq('active',true);
+  const {data:rosters}=await admin.from('team_roster_members').select('id,team_season_id,primary_position,squad_number,team_seasons(season_id,teams(display_name,club_id))').eq('player_id',player.id).eq('active',true);
   return {
     ...player,
     registrations:(registrations??[]).map(registration=>({...registration,seasons:one(registration.seasons),clubs:one(registration.clubs)})),
