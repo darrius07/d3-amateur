@@ -1,6 +1,7 @@
 'use server';
 import crypto from 'node:crypto';import {redirect} from 'next/navigation';import {revalidatePath} from 'next/cache';import {createClient} from '@/lib/supabase/server';import {createAdminClient} from '@/lib/supabase/admin';import {clubLogoPath,validateLogo} from '@/lib/clubs/logo';import {playerSlug} from '@/lib/players/identity';import {parisLocalToUtcIso,validateOpponentShape,validateScore} from '@/lib/matches/identity';
 import {validateDisplayName,validateEmail,validateExternalUrl,validateFoundedYear,validateHexColor,validateLongDescription,validatePhone,validatePostalCode,validateShortDescription} from '@/lib/clubs/profile';
+import {validateCustomRole,validateShortBio,validateStaffDisplayName,type StaffRole} from '@/lib/staff/staff';
 async function ownerContext(clubId:string){const auth=await createClient();const {data:{user}}=await auth.auth.getUser();if(!user)throw new Error('Non authentifié');const admin=createAdminClient();const {data:membership}=await admin.from('club_memberships').select('id').eq('club_id',clubId).eq('user_id',user.id).eq('role','OWNER').eq('active',true).maybeSingle();const {data:profile}=await admin.from('user_profiles').select('d3_admin_role').eq('id',user.id).maybeSingle();if(!membership&&!profile?.d3_admin_role)throw new Error('Accès refusé');return {user,admin}}
 export async function uploadClubLogo(formData:FormData){const clubId=String(formData.get('club_id'));const file=formData.get('logo');if(!(file instanceof File))throw new Error('Fichier requis');const {user,admin}=await ownerContext(clubId);const bytes=new Uint8Array(await file.arrayBuffer());const type=validateLogo({bytes,declaredMime:file.type,size:file.size});const path=clubLogoPath(clubId,crypto.randomUUID(),type.extension);const {data:club,error:clubError}=await admin.from('clubs').select('logo_path,slug').eq('id',clubId).single();if(clubError)throw clubError;const {error:uploadError}=await admin.storage.from('club-assets').upload(path,bytes,{contentType:type.mime,upsert:false});if(uploadError)throw uploadError;const {error:updateError}=await admin.from('clubs').update({logo_path:path,logo_source:'CLUB',logo_updated_at:new Date().toISOString()}).eq('id',clubId);if(updateError){await admin.storage.from('club-assets').remove([path]);throw updateError}if(club.logo_path&&club.logo_path.startsWith(`clubs/${clubId}/logo/`))await admin.storage.from('club-assets').remove([club.logo_path]);await admin.from('admin_audit_logs').insert({actor_user_id:user.id,action:club.logo_path?'logo_replaced':'logo_uploaded',entity_type:'club',entity_id:clubId,details:{before:{logo_path:club.logo_path},after:{logo_path:path},source:'CLUB'}});revalidatePath('/club-studio');revalidatePath(`/clubs/${club.slug}`)}
 export async function deleteClubLogo(formData:FormData){const clubId=String(formData.get('club_id'));const {user,admin}=await ownerContext(clubId);const {data:club,error}=await admin.from('clubs').select('logo_path,slug').eq('id',clubId).single();if(error)throw error;if(club.logo_path&&!club.logo_path.startsWith(`clubs/${clubId}/logo/`))throw new Error('Chemin asset invalide');await admin.from('clubs').update({logo_path:null,logo_source:null,logo_updated_at:new Date().toISOString()}).eq('id',clubId);if(club.logo_path)await admin.storage.from('club-assets').remove([club.logo_path]);await admin.from('admin_audit_logs').insert({actor_user_id:user.id,action:'logo_deleted',entity_type:'club',entity_id:clubId,details:{before:{logo_path:club.logo_path},after:{logo_path:null}}});revalidatePath('/club-studio');revalidatePath(`/clubs/${club.slug}`)}
@@ -234,4 +235,64 @@ export async function deleteMatchEvent(formData:FormData){
   if(error)throw error;
   revalidatePath(`/club-studio/matches/${matchId}/events`);
   revalidatePath(`/matches/${matchId}`);
+}
+
+function readStaffFields(formData:FormData){
+  const displayName=readText(formData,'display_name');
+  const roleType=readText(formData,'role_type') as StaffRole;
+  const customRole=readText(formData,'custom_role');
+  const shortBio=readText(formData,'short_bio');
+  const teamSeasonId=readText(formData,'team_season_id').trim()||null;
+  const publicVisible=formData.get('public_visible')==='on';
+  const checks=[validateStaffDisplayName(displayName),validateShortBio(shortBio),validateCustomRole(roleType,customRole)];
+  const firstError=checks.find(c=>!c.valid);
+  if(firstError)throw new Error(firstError.error);
+  return {displayName,roleType,customRole,shortBio,teamSeasonId,publicVisible};
+}
+
+async function revalidateStaffPaths(admin:ReturnType<typeof createAdminClient>,clubId:string){
+  const {data:club}=await admin.from('clubs').select('slug').eq('id',clubId).single();
+  revalidatePath(`/club-studio/staff?club_id=${clubId}`);
+  revalidatePath('/club-studio');
+  if(club?.slug)revalidatePath(`/clubs/${club.slug}`);
+}
+
+export async function addClubStaff(formData:FormData){
+  const clubId=String(formData.get('club_id'));
+  const {user,admin}=await ownerContext(clubId);
+  const fields=readStaffFields(formData);
+  const {error}=await admin.rpc('add_club_staff',{
+    actor_id:user.id,target_club_id:clubId,p_team_season_id:fields.teamSeasonId,
+    p_display_name:fields.displayName,p_role_type:fields.roleType,p_custom_role:fields.customRole,
+    p_short_bio:fields.shortBio,p_public_visible:fields.publicVisible,
+  });
+  if(error)throw error;
+  await revalidateStaffPaths(admin,clubId);
+  redirect(`/club-studio/staff?club_id=${clubId}&message=staff-added`);
+}
+
+export async function updateClubStaff(formData:FormData){
+  const clubId=String(formData.get('club_id'));
+  const {user,admin}=await ownerContext(clubId);
+  const staffId=String(formData.get('staff_id'));
+  const fields=readStaffFields(formData);
+  const sortOrderRaw=readText(formData,'sort_order').trim();
+  const {error}=await admin.rpc('update_club_staff',{
+    actor_id:user.id,p_staff_id:staffId,p_team_season_id:fields.teamSeasonId,
+    p_display_name:fields.displayName,p_role_type:fields.roleType,p_custom_role:fields.customRole,
+    p_short_bio:fields.shortBio,p_public_visible:fields.publicVisible,p_sort_order:sortOrderRaw?Number(sortOrderRaw):null,
+  });
+  if(error)throw error;
+  await revalidateStaffPaths(admin,clubId);
+  redirect(`/club-studio/staff?club_id=${clubId}&message=staff-updated`);
+}
+
+export async function deactivateClubStaff(formData:FormData){
+  const clubId=String(formData.get('club_id'));
+  const {user,admin}=await ownerContext(clubId);
+  const staffId=String(formData.get('staff_id'));
+  const {error}=await admin.rpc('deactivate_club_staff',{actor_id:user.id,p_staff_id:staffId});
+  if(error)throw error;
+  await revalidateStaffPaths(admin,clubId);
+  redirect(`/club-studio/staff?club_id=${clubId}&message=staff-removed`);
 }

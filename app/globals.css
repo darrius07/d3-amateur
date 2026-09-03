@@ -178,7 +178,7 @@ h1 {
 .profile-section-hint{margin:0 0 18px;color:var(--muted);font-size:13px}
 .profile-field{display:block;margin-top:16px;font-weight:700;font-size:14px}
 .profile-field:first-child{margin-top:0}
-.profile-field input[type=text],.profile-field input[type=email],.profile-field input[type=tel],.profile-field input[type=number],.profile-field input[type=url],.profile-field textarea{display:block;width:100%;margin-top:7px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--field);font:inherit;font-weight:400;font-size:15px;color:var(--ink)}
+.profile-field input[type=text],.profile-field input[type=email],.profile-field input[type=tel],.profile-field input[type=number],.profile-field input[type=url],.profile-field textarea,.profile-field select{display:block;width:100%;margin-top:7px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--field);font:inherit;font-weight:400;font-size:15px;color:var(--ink)}
 .profile-field textarea{min-height:90px;resize:vertical}
 .profile-field input:focus,.profile-field textarea:focus{outline:2px solid #829d24;outline-offset:1px;background:#fff}
 .profile-field-sub{margin:5px 0 0;font-weight:400;font-size:12px;color:var(--muted)}
@@ -234,3 +234,42 @@ h1 {
 
 @media (min-width:1000px){.profile-editor{grid-template-columns:1.5fr 1fr;grid-template-areas:"form preview"}}
 @media (max-width:720px){.identity-card{padding:20px;gap:18px}.identity-card-logo{width:64px;height:64px}.identity-card-body h2{font-size:21px}.field-grid,.color-fields{grid-template-columns:1fr}.preview-card{position:static}.save-bar{flex-direction:column;align-items:stretch}.club-hero-halo{width:140px;height:140px;inset:-24px auto auto -24px}}
+
+/* ============================================================================
+   Step 6B: club staff. "Voici les personnes derrière ce club" -- a compact,
+   human, list-based presentation (never an admin grid of oversized cards),
+   using the same avatar-initials language already established for club
+   logos (.identity-card-logo-placeholder) so a person's placeholder reads
+   as "the same product", not a bolted-on feature.
+   ============================================================================ */
+
+.identity-card-secondary-link{display:inline-block;margin-top:2px;color:#557200;font-size:13px;font-weight:750}
+
+/* --- Club Studio: compact vertical staff list ------------------------------ */
+.staff-list{margin:0;padding:0;list-style:none}
+.staff-card{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+.staff-list li.staff-card:first-child{border-top:0}
+.staff-avatar{flex-shrink:0;display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--ink);color:var(--accent);font-size:14px;font-weight:800;letter-spacing:.02em}
+.staff-card-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.staff-card-body strong{font-size:15px;overflow-wrap:anywhere}
+.staff-card-body small{color:var(--muted);font-size:13px}
+.staff-visibility{display:inline-flex;align-self:flex-start;margin-top:4px;padding:3px 9px;border-radius:999px;background:var(--field);color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.staff-visibility.is-public{background:#e8f7c4;color:#456000}
+.staff-edit{flex-shrink:0}
+.staff-edit summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:700;list-style:none}
+.staff-edit summary::-webkit-details-marker{display:none}
+.staff-edit[open] summary{color:var(--ink)}
+.staff-edit form{margin-top:14px}
+.staff-visible-toggle{display:flex;align-items:center;gap:9px;margin-top:16px;font-weight:700;font-size:14px}
+.staff-visible-toggle input{width:auto;margin:0}
+
+/* --- Public club page: staff by group -------------------------------------- */
+.staff-panel h3{margin:20px 0 10px;font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.staff-panel .staff-group:first-of-type h3{margin-top:0}
+.staff-public-list{display:grid;gap:14px;margin:0;padding:0;list-style:none}
+.staff-public-list li{display:flex;align-items:flex-start;gap:14px}
+.staff-public-list strong{display:block;font-size:15px}
+.staff-public-list small{color:var(--muted);font-size:13px}
+.staff-public-list p{margin:4px 0 0;font-size:13px;line-height:1.5;max-width:60ch}
+
+@media (max-width:720px){.staff-card{flex-wrap:wrap}.staff-edit{width:100%;margin-top:8px}}
