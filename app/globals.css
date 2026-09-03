@@ -273,3 +273,30 @@ h1 {
 .staff-public-list p{margin:4px 0 0;font-size:13px;line-height:1.5;max-width:60ch}
 
 @media (max-width:720px){.staff-card{flex-wrap:wrap}.staff-edit{width:100%;margin-top:8px}}
+
+/* ============================================================================
+   Step 6C: club sponsors. "Voici les partenaires qui soutiennent notre
+   club" -- sober, local, never an ad-tech marketplace. MAIN gets modest
+   extra visual weight (a slightly larger logo, nothing more); every other
+   tier stays compact and equal. Logos of any aspect ratio are contained,
+   never stretched, on a small white card so a transparent PNG never looks
+   broken against the page background.
+   ============================================================================ */
+
+.sponsor-logo,.sponsor-logo-public{display:block;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px}
+.sponsor-group{margin-top:20px}
+.sponsor-group:first-of-type{margin-top:0}
+.sponsor-group h3{margin:0 0 10px;font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.sponsor-group--main h3{color:#557200}
+.sponsor-list{display:grid;gap:14px;margin:0;padding:0;list-style:none}
+.sponsor-group--main .sponsor-list{gap:16px}
+.sponsor-list li{display:block}
+.sponsor-list a,.sponsor-static{display:flex;align-items:center;gap:14px;color:inherit}
+.sponsor-list a{border-radius:12px;padding:6px;margin:-6px;transition:background .15s ease}
+.sponsor-list a:hover,.sponsor-list a:focus-visible{background:var(--field)}
+.sponsor-list strong{display:block;font-size:15px}
+.sponsor-group--main .sponsor-list strong{font-size:16px}
+.sponsor-list small{color:var(--muted);font-size:12px}
+.sponsor-list p{margin:3px 0 0;font-size:13px;line-height:1.5;color:var(--ink);max-width:56ch}
+
+@media (max-width:720px){.sponsor-list a,.sponsor-static{align-items:flex-start}}
